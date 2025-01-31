@@ -1,0 +1,103 @@
+#include <iostream>
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <cstring>
+#include <clocale>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    srand(static_cast<unsigned>(time(nullptr)));
+
+    int choice;
+    string filename = "passwords.txt";
+
+    
+    long long largeNumber = 123456789012345LL;
+    auto exampleFloat = 3.14159f;
+    cout << "Пример long long: " << largeNumber << endl;
+    cout << "Пример auto (float): " << exampleFloat << endl;
+
+    while (true) {
+        cout << "--- Меню ---\n";
+        cout << "1. Сгенерировать новый пароль\n";
+        cout << "2. Просмотреть сохраненные пароли\n";
+        cout << "3. Выйти\n";
+        cout << "Выберите действие: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int length;
+            cout << "Введите длину пароля: ";
+            cin >> length;
+
+            length = (length < 6) ? 6 : length;
+
+            string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            string password;
+            int charsetSize = charset.length();
+
+            int i = 0;
+            while (i < length) {
+                password += charset[rand() % charsetSize];
+                i++;
+            }
+
+        
+            bool hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
+            int j = 0;
+            while (j < password.length()) {
+                if (islower(password[j])) hasLower = true;
+                if (isupper(password[j])) hasUpper = true;
+                if (isdigit(password[j])) hasDigit = true;
+                if (ispunct(password[j])) hasSpecial = true;
+                j++;
+            }
+
+            int score = hasLower + hasUpper + hasDigit + hasSpecial;
+            string strength;
+            if (password.length() >= 12 && score == 4) strength = "Сильный";
+            else if (password.length() >= 8 && score >= 3) strength = "Средний";
+            else strength = "Слабый";
+
+            cout << "Сгенерированный пароль: " << password << endl;
+            cout << "Сложность пароля: " << strength << endl;
+
+            ofstream file(filename, ios::app);
+            if (file.is_open()) {
+                file << password << endl;
+                file.close();
+                cout << "Пароль успешно сохранен в файл " << filename << endl;
+            }
+            else {
+                cerr << "Ошибка открытия файла!" << endl;
+            }
+        }
+        else if (choice == 2) {
+            ifstream file(filename);
+            if (file.is_open()) {
+                string line;
+                cout << "Список сохраненных паролей:" << endl;
+                while (getline(file, line)) {
+                    cout << line << endl;
+                }
+                file.close();
+            }
+            else {
+                cerr << "Ошибка открытия файла!" << endl;
+            }
+        }
+        else if (choice == 3) {
+            cout << "Выход из программы..." << endl;
+            break;
+        }
+        else {
+            cout << "Некорректный выбор. Попробуйте снова." << endl;
+        }
+    }
+    return 0;
+}
