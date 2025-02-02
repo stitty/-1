@@ -9,24 +9,23 @@
 
 using namespace std;
 
+const int MAX_PASSWORDS = 10; 
+
 int main() {
     setlocale(LC_ALL, "Russian");
     srand(static_cast<unsigned>(time(nullptr)));
 
     int choice;
     string filename = "passwords.txt";
-
-    
-    long long largeNumber = 123456789012345LL;
-    auto exampleFloat = 3.14159f;
-    cout << "Пример long long: " << largeNumber << endl;
-    cout << "Пример auto (float): " << exampleFloat << endl;
+    string passwords[MAX_PASSWORDS];
+    int passwordCount = 0;
 
     while (true) {
         cout << "--- Меню ---\n";
         cout << "1. Сгенерировать новый пароль\n";
         cout << "2. Просмотреть сохраненные пароли\n";
-        cout << "3. Выйти\n";
+        cout << "3. Мини-игра: взлом трехзначного замка\n";
+        cout << "4. Выйти\n";
         cout << "Выберите действие: ";
         cin >> choice;
 
@@ -34,44 +33,49 @@ int main() {
             int length;
             cout << "Введите длину пароля: ";
             cin >> length;
-
             length = (length < 6) ? 6 : length;
 
-            string charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            string password;
-            int charsetSize = charset.length();
+            if (passwordCount < MAX_PASSWORDS) {
+                const char* charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+                int charsetSize = strlen(charset);
+                passwords[passwordCount] = "";
+                int i = 0;
+                while (i < length) {
+                    passwords[passwordCount] += charset[rand() % charsetSize];
+                    i++;
+                }
 
-            int i = 0;
-            while (i < length) {
-                password += charset[rand() % charsetSize];
-                i++;
+                bool hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
+                int j = 0;
+                while (j < passwords[passwordCount].length()) {
+                    if (islower(passwords[passwordCount][j])) hasLower = true;
+                    if (isupper(passwords[passwordCount][j])) hasUpper = true;
+                    if (isdigit(passwords[passwordCount][j])) hasDigit = true;
+                    if (ispunct(passwords[passwordCount][j])) hasSpecial = true;
+                    j++;
+                }
+
+                int score = hasLower + hasUpper + hasDigit + hasSpecial;
+                string strength = (passwords[passwordCount].length() >= 12 && score == 4) ? "Сильный" :
+                    (passwords[passwordCount].length() >= 8 && score >= 3) ? "Средний" : "Слабый";
+
+                cout << "Сгенерированный пароль: " << passwords[passwordCount] << endl;
+                cout << "Сложность пароля: " << strength << endl;
+                passwordCount++;
             }
-
-        
-            bool hasLower = false, hasUpper = false, hasDigit = false, hasSpecial = false;
-            int j = 0;
-            while (j < password.length()) {
-                if (islower(password[j])) hasLower = true;
-                if (isupper(password[j])) hasUpper = true;
-                if (isdigit(password[j])) hasDigit = true;
-                if (ispunct(password[j])) hasSpecial = true;
-                j++;
+            else {
+                cout << "Достигнуто максимальное количество паролей." << endl;
             }
-
-            int score = hasLower + hasUpper + hasDigit + hasSpecial;
-            string strength;
-            if (password.length() >= 12 && score == 4) strength = "Сильный";
-            else if (password.length() >= 8 && score >= 3) strength = "Средний";
-            else strength = "Слабый";
-
-            cout << "Сгенерированный пароль: " << password << endl;
-            cout << "Сложность пароля: " << strength << endl;
 
             ofstream file(filename, ios::app);
             if (file.is_open()) {
-                file << password << endl;
+                int i = 0;
+                while (i < passwordCount) {
+                    file << passwords[i] << endl;
+                    i++;
+                }
                 file.close();
-                cout << "Пароль успешно сохранен в файл " << filename << endl;
+                cout << "Пароли успешно сохранены в файл " << filename << endl;
             }
             else {
                 cerr << "Ошибка открытия файла!" << endl;
@@ -92,6 +96,32 @@ int main() {
             }
         }
         else if (choice == 3) {
+            int secretCode = rand() % 900 + 100;
+            int* ptrSecretCode = &secretCode;
+            int attempt;
+
+            cout << "Попробуйте угадать трехзначный код замка! Введите число (или -1 для выхода в меню): ";
+            while (true) {
+                cin >> attempt;
+                if (attempt == -1) {
+                    cout << "Выход в меню..." << endl;
+                    break;
+                }
+                if (attempt == *ptrSecretCode) {
+                    cout << "Поздравляем! Вы угадали код!" << endl;
+                    break;
+                }
+                else {
+                    cout << "Неверный код. Хотите подсказку? (1 - первая цифра, 2 - вторая, 3 - третья, 0 - нет): ";
+                    int hintChoice;
+                    cin >> hintChoice;
+                    if (hintChoice == 1) cout << "Первая цифра: " << (*ptrSecretCode / 100) % 10 << endl;
+                    else if (hintChoice == 2) cout << "Вторая цифра: " << (*ptrSecretCode / 10) % 10 << endl;
+                    else if (hintChoice == 3) cout << "Третья цифра: " << *ptrSecretCode % 10 << endl;
+                }
+            }
+        }
+        else if (choice == 4) {
             cout << "Выход из программы..." << endl;
             break;
         }
